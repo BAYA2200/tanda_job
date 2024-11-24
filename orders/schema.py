@@ -4,22 +4,28 @@ from .models import Order
 
 
 class OrderType(DjangoObjectType):
+    """Represents an Order with its details."""
     class Meta:
         model = Order
         fields = "__all__"
 
 
 class Query(graphene.ObjectType):
-    orders = graphene.List(OrderType)
+    """API endpoints for querying orders."""
+
+    orders = graphene.List(OrderType,  description="Retrieve a list of all orders.")
 
     def resolve_orders(root, info):
+        """Resolver for fetching all orders."""
         return Order.objects.all()
 
 
 class CreateOrder(graphene.Mutation):
+    """Mutation for creating a new order."""
+
     class Arguments:
-        title = graphene.String(required=True)
-        description = graphene.String(required=False)
+        title = graphene.String(required=True, description="The title of the order.")
+        description = graphene.String(required=False , description="A short description of the order.")
 
     order = graphene.Field(OrderType)
 

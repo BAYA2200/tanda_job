@@ -11,3 +11,4 @@ class Mutation(OrdersMutation, graphene.ObjectType):
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
+
