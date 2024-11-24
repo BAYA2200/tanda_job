@@ -17,10 +17,10 @@ class UserType(DjangoObjectType):
 class Query(OrdersQuery, graphene.ObjectType):
     me = graphene.Field(UserType)
 
-    def resolve_me(root, info):
+    def resolve_me(self, info):
         user = info.context.user
         if user.is_anonymous:
-            raise Exception("Not authenticated!")
+            raise Exception("Пользователь не аутентифицирован!")
         return user
 
 
@@ -37,9 +37,9 @@ class CreateUser(graphene.Mutation):
 
     def mutate(self, info, username, email, password):
         if User.objects.filter(username=username).exists():
-            raise Exception("Username already exists.")
+            raise Exception("Пользователь с таким именем уже существует.")
         if User.objects.filter(email=email).exists():
-            raise Exception("Email already exists.")
+            raise Exception("Пользователь с таким email уже существует.")
 
         user = User.objects.create_user(username=username, email=email, password=password)
         token = get_token(user)
@@ -53,11 +53,18 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
     refresh_token = graphene.String()
 
     @classmethod
-    def resolve(cls, root, info, **kwargs):
-        result = super().resolve(root, info, **kwargs)
-        result.refresh_token = create_refresh_token(info.context.user)
-        result.user = info.context.user
-        return result
+    def mutate(cls, root, info, **kwargs):
+        # Используем mutate из родительского класса для генерации токена
+        result = super().mutate(root, info, **kwargs)
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Пользователь не аутентифицирован!")
+
+        return cls(
+            token=result.token,
+            refresh_token=create_refresh_token(user),
+            user=user,
+        )
 
 
 # Мутации

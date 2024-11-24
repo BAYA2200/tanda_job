@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,6 +37,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Должно быть после SecurityMiddleware
+    'graphql_jwt.middleware.JSONWebTokenMiddleware',  # Добавляем эту строку
 
 ]
 
@@ -107,6 +109,11 @@ GRAPHENE = {
     "MIDDLEWARE": [
         "graphql_jwt.middleware.JSONWebTokenMiddleware",
     ],
+}
+GRAPHQL_JWT = {
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': timedelta(hours=1),  # Время жизни токена
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),  # Время жизни refresh-токена
 }
 
 AUTHENTICATION_BACKENDS = [
