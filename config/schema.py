@@ -58,24 +58,21 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
     @classmethod
     def resolve(cls, root, info, **kwargs):
-        # Используем стандартное поведение родительского класса
         return super().resolve(root, info, **kwargs)
 
     @classmethod
     def mutate(cls, root, info, username, password, **kwargs):
+        # Проверка учетных данных пользователя
         user = User.objects.filter(username=username).first()
         if not user or not user.check_password(password):
             raise Exception("Invalid credentials.")
 
+        # Генерация токенов
         token = get_token(user)
         refresh_token = create_refresh_token(user)
 
-        return cls(
-            token=token,
-            refresh_token=refresh_token,
-            user=user,
-        )
-
+        # Возврат экземпляра класса с заполненными полями
+        return cls(user=user, refresh_token=refresh_token, token=token)
 
 # Мутации
 class Mutation(OrdersMutation, graphene.ObjectType):
