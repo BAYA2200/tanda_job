@@ -5,6 +5,7 @@ import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
 from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
 
+
 # Тип пользователя
 class UserType(DjangoObjectType):
     class Meta:
@@ -57,10 +58,15 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
     @classmethod
     def resolve(cls, root, info, username, password, **kwargs):
+        # Здесь выполняется стандартная логика для аутентификации пользователя
         user = User.objects.filter(username=username).first()
         if not user or not user.check_password(password):
             raise Exception("Invalid credentials.")
-        result = super().resolve(root, info, **kwargs)
+
+        # Теперь генерируем стандартный токен
+        result = super().resolve(root, info, username=username, password=password, **kwargs)
+
+        # Добавляем refresh токен
         result.refresh_token = create_refresh_token(user)
         result.user = user
         return result
