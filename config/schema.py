@@ -36,7 +36,8 @@ class CreateUser(graphene.Mutation):
         user = User.objects.create_user(username=username, email=email, password=password)
         token = get_token(user)
         refresh_token = create_refresh_token(user)
-        return CreateUser(user=user, token=token, refreshToken=refresh_token)
+        return CreateUser(user=user, token=token, refresh_token=refresh_token)
+
 # Мутации
 class Mutation(OrdersMutation, graphene.ObjectType):
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
