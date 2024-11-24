@@ -37,7 +37,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Должно быть после SecurityMiddleware
-    'graphql_jwt.middleware.JSONWebTokenMiddleware',  # Добавляем эту строку
 
 ]
 
