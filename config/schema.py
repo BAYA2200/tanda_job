@@ -1,29 +1,18 @@
 import graphene
 from django.contrib.auth.models import User
 from graphene_django import DjangoObjectType
-
-from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
-import graphql_jwt
-
-from django.contrib.auth.models import User
-from graphene_django import DjangoObjectType
-from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
 import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
-class Query(OrdersQuery, graphene.ObjectType):
-    pass
+from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
 
-
-class Mutation(OrdersMutation, graphene.ObjectType):
-    pass
-
+# Тип пользователя
 class UserType(DjangoObjectType):
     class Meta:
         model = User
         fields = ("id", "username", "email")
 
-
-class Query(graphene.ObjectType):
+# Запросы
+class Query(OrdersQuery, graphene.ObjectType):
     me = graphene.Field(UserType)
 
     def resolve_me(root, info):
@@ -32,15 +21,7 @@ class Query(graphene.ObjectType):
             raise Exception("Not authenticated!")
         return user
 
-
-class Mutation(graphene.ObjectType):
-    # Мутация для логина
-    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
-    # Мутация для обновления токена
-    refresh_token = graphql_jwt.Refresh.Field()
-    # Мутация для выхода (удаление refresh токена)
-    revoke_token = graphql_jwt.Revoke.Field()
-
+# Мутация для создания пользователя
 class CreateUser(graphene.Mutation):
     user = graphene.Field(UserType)
     token = graphene.String()
@@ -57,5 +38,12 @@ class CreateUser(graphene.Mutation):
         refresh_token = create_refresh_token(user)
         return CreateUser(user=user, token=token, refresh_token=refresh_token)
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+# Мутации
+class Mutation(OrdersMutation, graphene.ObjectType):
+    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+    refresh_token = graphql_jwt.Refresh.Field()
+    revoke_token = graphql_jwt.Revoke.Field()
+    create_user = CreateUser.Field()
 
+# Схема
+schema = graphene.Schema(query=Query, mutation=Mutation)
