@@ -5,7 +5,6 @@ import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
 from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
 
-
 # Тип пользователя
 class UserType(DjangoObjectType):
     class Meta:
@@ -17,10 +16,10 @@ class UserType(DjangoObjectType):
 class Query(OrdersQuery, graphene.ObjectType):
     me = graphene.Field(UserType)
 
-    def resolve_me(self, info):
+    def resolve_me(root, info):
         user = info.context.user
         if user.is_anonymous:
-            raise Exception("Пользователь не аутентифицирован!")
+            raise Exception("Not authenticated!")
         return user
 
 
@@ -37,9 +36,9 @@ class CreateUser(graphene.Mutation):
 
     def mutate(self, info, username, email, password):
         if User.objects.filter(username=username).exists():
-            raise Exception("Пользователь с таким именем уже существует.")
+            raise Exception("Username already exists.")
         if User.objects.filter(email=email).exists():
-            raise Exception("Пользователь с таким email уже существует.")
+            raise Exception("Email already exists.")
 
         user = User.objects.create_user(username=username, email=email, password=password)
         token = get_token(user)
@@ -52,20 +51,19 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
     user = graphene.Field(UserType)
     refresh_token = graphene.String()
 
-    @classmethod
-    def resolve(cls, root, info, **kwargs):
-        # Вызов mutate у родительского класса для получения базовой логики
-        result = super().mutate(root, info, **kwargs)
-        user = info.context.user
-        if user.is_anonymous:
-            raise Exception("Пользователь не аутентифицирован!")
+    class Arguments:
+        username = graphene.String(required=True)
+        password = graphene.String(required=True)
 
-        # Возвращаем данные с дополнительным refresh_token
-        return cls(
-            token=result.token,
-            refresh_token=create_refresh_token(user),
-            user=user,
-        )
+    @classmethod
+    def resolve(cls, root, info, username, password, **kwargs):
+        user = User.objects.filter(username=username).first()
+        if not user or not user.check_password(password):
+            raise Exception("Invalid credentials.")
+        result = super().resolve(root, info, **kwargs)
+        result.refresh_token = create_refresh_token(user)
+        result.user = user
+        return result
 
 
 # Мутации
