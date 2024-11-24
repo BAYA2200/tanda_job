@@ -22,6 +22,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'graphene_django',
     'orders',
+    'drf_yasg',
+
 ]
 
 MIDDLEWARE = [
