@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'orders',
     'drf_yasg',
+    'graphql_jwt.refresh_token',  # Добавьте это приложение
 
 ]
 
