@@ -53,13 +53,14 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
     refresh_token = graphene.String()
 
     @classmethod
-    def mutate(cls, root, info, **kwargs):
-        # Используем mutate из родительского класса для генерации токена
+    def resolve(cls, root, info, **kwargs):
+        # Вызов mutate у родительского класса для получения базовой логики
         result = super().mutate(root, info, **kwargs)
         user = info.context.user
         if user.is_anonymous:
             raise Exception("Пользователь не аутентифицирован!")
 
+        # Возвращаем данные с дополнительным refresh_token
         return cls(
             token=result.token,
             refresh_token=create_refresh_token(user),
