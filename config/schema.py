@@ -5,11 +5,13 @@ import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
 from orders.schema import Query as OrdersQuery, Mutation as OrdersMutation
 
+
 # Тип пользователя
 class UserType(DjangoObjectType):
     class Meta:
         model = User
         fields = ("id", "username", "email")
+
 
 # Запросы
 class Query(OrdersQuery, graphene.ObjectType):
@@ -20,6 +22,7 @@ class Query(OrdersQuery, graphene.ObjectType):
         if user.is_anonymous:
             raise Exception("Not authenticated!")
         return user
+
 
 # Мутация для создания пользователя
 class CreateUser(graphene.Mutation):
@@ -33,10 +36,16 @@ class CreateUser(graphene.Mutation):
         password = graphene.String(required=True)
 
     def mutate(self, info, username, email, password):
+        if User.objects.filter(username=username).exists():
+            raise Exception("Username already exists.")
+        if User.objects.filter(email=email).exists():
+            raise Exception("Email already exists.")
+
         user = User.objects.create_user(username=username, email=email, password=password)
         token = get_token(user)
         refresh_token = create_refresh_token(user)
         return CreateUser(user=user, token=token, refresh_token=refresh_token)
+
 
 # Мутации
 class Mutation(OrdersMutation, graphene.ObjectType):
@@ -44,6 +53,7 @@ class Mutation(OrdersMutation, graphene.ObjectType):
     refresh_token = graphql_jwt.Refresh.Field()
     revoke_token = graphql_jwt.Revoke.Field()
     create_user = CreateUser.Field()
+
 
 # Схема
 schema = graphene.Schema(query=Query, mutation=Mutation)
