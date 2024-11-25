@@ -49,9 +49,10 @@ class CreateUser(graphene.Mutation):
 
 # Кастомная мутация для получения токенов
 # Кастомная мутация для получения токенов
+# Кастомная мутация для получения токенов
 class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
     user = graphene.Field(UserType)
-    token = graphene.String()  # Добавлено явное определение токена
+    token = graphene.String()
     refresh_token = graphene.String()
 
     class Arguments:
@@ -71,6 +72,12 @@ class CustomObtainJSONWebToken(graphql_jwt.JSONWebTokenMutation):
 
         # Возврат экземпляра класса с заполненными полями
         return cls(user=user, token=token, refresh_token=refresh_token)
+
+    @classmethod
+    def resolve(cls, root, info, **kwargs):
+        # Здесь resolve должен просто вернуть результат без изменений
+        return root
+
 
 
 # Мутации
